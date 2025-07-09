@@ -50,7 +50,8 @@ class RAGSystem:
         vectorstore = Chroma(
             collection_name=self.collection_name,
             persist_directory=self.vector_store_path,
-            embedding_function=self.embedding_model
+            embedding_function=self.embedding_model,
+            collection_metadata={"hnsw:space": "cosine"}
         )
         print("Vector store loaded successfully!")
         return vectorstore
@@ -86,35 +87,7 @@ class RAGSystem:
         except Exception as e:
             print(f"Error adding documents: {e}")
             return []
-    
-    def similarity_search(self, query: str, k: int = 4, 
-                         filter_dict: Optional[Dict] = None) -> List[Document]:
-        """
-        執行相似度搜尋
-        
-        Args:
-            query: 查詢文字
-            k: 返回的文件數量
-            filter_dict: 過濾條件
-            
-        Returns:
-            相似的文件列表
-        """
-        try:
-            vectorstore = self._ensure_vectorstore_loaded()
-            if filter_dict:
-                results = vectorstore.similarity_search(
-                    query, k=k, filter=filter_dict
-                )
-            else:
-                results = vectorstore.similarity_search(query, k=k)
-            
-            print(f"Found {len(results)} similar documents for query: '{query}'")
-            return results
-            
-        except Exception as e:
-            print(f"Error during similarity search: {e}")
-            return []
+
     
     def similarity_search_with_scores(self, query: str, k: int = 4,
                                     filter_dict: Optional[Dict] = None) -> List[Tuple[Document, float]]:
@@ -227,7 +200,6 @@ class RAGSystem:
         except Exception as e:
             print(f"Error processing PDF file: {e}")
             return []
-    
 
     def delete_documents_by_filename(self, filename: str) -> Dict[str, Any]:
         """
@@ -457,8 +429,6 @@ class RAGSystem:
             print(f"Error getting vectorstore info: {e}")
             return {}
     
-
-    
     def get_rag_response(self, user_query: str, k: int = 3) -> str:
         """
         獲取 RAG 回應 (檢索 + 生成)
@@ -485,7 +455,7 @@ class RAGSystem:
             context = "\n\n".join(context_parts)
             
             # 建構回應 (這裡可以接 LLM 生成，目前先返回檢索結果)
-            response = f"根據我找到的相關資料：\n\n{context}"
+            response = f"相關資料：\n\n{context}"
             
             return response
             

@@ -1,86 +1,74 @@
 # Documentation: https://python.langchain.com/api_reference/chroma/vectorstores/langchain_chroma.vectorstores.Chroma.html
 from langchain_core.documents import Document
-from langchain_chroma import Chroma
-from src.utils.pdf_process import load_pdf, split_text
+from src.vectordatabase import load_chroma_vectorstore, check_vectorstore
 from src.embedding import load_embedding_model
 from pathlib import Path as path
+
 
 base_dir = path(__file__).parent.parent
 vector_store_path = base_dir / "vectorstore"
 model_path = base_dir / "cache"
 
-def load_chroma_vectorstore(collection_name=None,
-                            persist_directory="./chroma_db",
-                            embedding_function=None):
-    vectorstore = Chroma(
-        collection_name=collection_name,
-        persist_directory=persist_directory,
-        embedding_function=embedding_function
-        )
-    return vectorstore
-
 # https://huggingface.co/sentence-transformers
-# embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2"
-# embedding_model = load_embedding_model(model_name=embedding_model_name, cache_folder=str(model_path))
+embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2" # 768
+embedding_model = load_embedding_model(
+    model_name=embedding_model_name,
+    cache_folder=str(model_path)
+)
 
-# vectorstore = load_chroma_vectorstore(
-#     collection_name="llm_course",
-#     persist_directory=str(vector_store_path),
-#     embedding_function=embedding_model
-#     )
+vectorstore = load_chroma_vectorstore(
+    collection_name="llm_course",
+    persist_directory=str(vector_store_path),
+    embedding_function=embedding_model
+)
+# 重製向量庫
+vectorstore.reset_collection()
 
-## 定義文件內容
-# document_1 = Document(
-#     page_content="I had chocolate chip pancakes and scrambled eggs for breakfast this morning.",
-#     metadata={"source": "tweet", "page": 1, "filename" : "breakfast_tweet.pdf", "type": "breakfast"},
-# )
+#### 簡單文檔敘述 ####
 
-# document_2 = Document(
-#     page_content="The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees.",
-#     metadata={"source": "news", "page": 2, "filename" : "weather_news.pdf","type": "weather"},
-# )
-# ids = ["1", "2"]
-# documents = [document_1, document_2]
-# print(documents)
-# vectorstore.add_documents(documents, ids=ids)
+# 定義文件內容
+document_1 = Document(
+    page_content="I had chocolate chip pancakes and scrambled eggs for breakfast this morning.",
+    metadata={"source": "tweet", "page": 1, "filename" : "breakfast_tweet.pdf", "type": "breakfast"},
+)
 
-# # 檢查向量庫結果
-# docs = vectorstore.get(where={"type": "breakfast"})
-# print(type(docs))
-# print(docs['ids'])
-# print(docs['embeddings'])
-# print(docs['metadatas'])
-# print(docs['documents'])
+document_2 = Document(
+    page_content="The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees.",
+    metadata={"source": "news", "page": 2, "filename" : "weather_news.pdf","type": "weather"},
+)
 
-# query = "What did I have for breakfast?"
+ids = ["1", "2"]
+documents = [document_1, document_2]
 
-# results = vectorstore.similarity_search_with_relevance_scores(
-#     query, 
-#     k=2,
-# )
+print("添加文檔：", end="\n")
+for doc in documents:
+    print(f"文檔內容: {doc.page_content}...") 
+    print(f"元數據: {doc.metadata}")
+    print("-" * 120, end="\n\n")
 
-# for doc, score in results:
-#     print(f"* [SIM={score}] {doc.page_content} [{doc.metadata}]")
+vectorstore.add_documents(documents, ids=ids)
 
+# 檢查向量庫結果
+print("向量庫內容：")
+check_vectorstore(vectorstore=vectorstore)
 
-#### PDF處理 ####
+print("更新ids=2文檔：")
+update_document = Document(
+    page_content="今天天氣真好，陽光明媚，氣溫適中。",
+    metadata={"source": "news", "page": 3, "filename" : "台灣.pdf","type": "weather"},
+)
+vectorstore.update_document(
+    document_id="2",
+    document=update_document
+)
+check_vectorstore(
+    vectorstore=vectorstore
+)
 
-pdf_path = base_dir / "pdf_input" / "KN-V24AT食譜集.pdf"
-docs = load_pdf(pdf_path = str(pdf_path))
-print("讀取完成")
-print(f"讀取 {len(docs)} 個文件")
-print(f"{docs}")
+print("刪除ids=1的文檔")
+vectorstore.delete(ids=["1"])
 
-docs = split_text(documents=docs,
-                  chunk_size=500,
-                  chunk_overlap=50)
+check_vectorstore(
+    vectorstore=vectorstore
+)
 
-print(f"讀取 {len(docs)} 個片段")
-for id, item in enumerate(docs):
-    print(f"片段:{id}")
-    print(f"頁數:{item.metadata}")
-    print(f"內容:\n{item.page_content[:100]}...\n")
-    print("="*50)
-
-
-# vectorstore.add_documents(documents)

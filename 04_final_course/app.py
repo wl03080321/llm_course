@@ -4,22 +4,18 @@ import shutil
 from src.RAG_System import RAGSystem
 from src.LLM_inference import LLMInference
 from transformers import BitsAndBytesConfig
+
 base_dir = os.path.dirname(os.path.abspath(__file__))
 upload_folder = os.path.join(base_dir, "file_temp")
 os.makedirs(upload_folder, exist_ok=True)
 quantization_config = BitsAndBytesConfig(
     load_in_8bit=True,  # 啟用 8-bit 量化
-    # bnb_4bit_quant_type="nf4",  # 使用 NF4 量化類型
-    # bnb_4bit_use_double_quant=True,  # 啟用雙重量化
-    # bnb_4bit_compute_dtype=torch.float16,  # 計算時使用 float16
-    # bnb_4bit_use_quantized_attention=True,  # 啟用量化注意力
 )
-rag_system = RAGSystem(embedding_model_name="jinaai/jina-embeddings-v2-base-zh")
+rag_system = RAGSystem(embedding_model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 llm = LLMInference(
     model_name="Qwen/Qwen2.5-1.5B-Instruct",
     quantization_config=quantization_config,  # 使用預設配置
-    )
-
+)
 
 latest_uploaded_files = []
 
@@ -167,7 +163,7 @@ def chatbot_reply(message, history, system_prompt, max_token, temperature, top_p
                 context = ""
                 
             rag_prompt = f"""
-以下是透過 RAG 檢索系統找到的相關資料：
+以下是檔案中相關資料：
 <CONTENT>
 {context}
 </CONTENT>
@@ -183,7 +179,7 @@ def chatbot_reply(message, history, system_prompt, max_token, temperature, top_p
             messages.append({"role": "user", "content": message})
         
         # 使用 LLM 生成回應（串流顯示）
-        for partial_response in llm.chat_stream_generator(
+        for partial_response in llm.generate(
             messages, 
             max_new_tokens=max_token,
             temperature=temperature,

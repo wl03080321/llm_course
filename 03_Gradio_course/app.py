@@ -28,21 +28,24 @@ def handle_multi_upload(files):
     else:
         return "沒有檔案被上傳", []
 
-# ChatBot 回應函數：顯示使用者文字與最近上傳的檔案（如果有）
 def chatbot_reply(message, history):
     global latest_uploaded_files
+    ids = len(history) + 1
     reply = f"你說了：{message}"
+    if len(history) > 0:
+        history[-1]["metadata"] = {"ids": ids}
+    print(f"歷史紀錄：{history}")
     if latest_uploaded_files:
-        reply += f"\n你最近上傳的檔案有：\n" + "\n".join(latest_uploaded_files)
+        reply += f"\n你上傳了：\n" + "\n".join(latest_uploaded_files)
     return reply
 
-# 建立 Gradio 頁面
 with gr.Blocks() as demo:
-    gr.Markdown("## 🧠 ChatBot + 📁 檔案上傳 Demo")
+    gr.Markdown("## 使用者介面 + 檔案上傳 Demo")
 
     with gr.Row():
         with gr.Column(scale=2):
-            chatbot = gr.ChatInterface(fn=chatbot_reply)
+            chatbot = gr.ChatInterface(fn=chatbot_reply,
+                                       type="messages")
 
         with gr.Column(scale=1):
             with gr.Group(elem_id="upload_scroll_area"):
@@ -54,7 +57,7 @@ with gr.Blocks() as demo:
                 file_output = gr.Textbox(label="上傳結果",
                                          interactive=False,
                                          )
-            image_gallery = gr.Gallery(label="圖片預覽")
+            image_gallery = gr.Gallery(label="圖片預覽") 
             file_upload.change(fn=handle_multi_upload,
                                inputs=file_upload,
                                outputs=[file_output, image_gallery])

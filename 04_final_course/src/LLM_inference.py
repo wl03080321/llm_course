@@ -3,7 +3,6 @@ import threading
 from typing import List, Dict, Optional, Union
 from pathlib import Path as path
 
-
 class LLMInference:
     def __init__(self, model_name: str = "Qwen/Qwen2.5-1.5B-Instruct", 
                  quantization_config: Optional[BitsAndBytesConfig] = None,
@@ -55,7 +54,7 @@ class LLMInference:
         )
         print("Tokenizer loaded successfully!")
         
-    def chat_stream_generator(self, input_data: Union[List[Dict], str], 
+    def generate(self, input_data: Union[List[Dict], str], 
                              max_new_tokens: int = 128, temperature: float = 0.7,
                              top_k: int = 50, top_p: float = 0.95):
         """
