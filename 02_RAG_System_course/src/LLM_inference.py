@@ -107,12 +107,10 @@ class LLMInference:
         # 開始生成
         self.model.eval()
         thread.start()
-        
-        # 逐步 yield 生成的文字
-        partial_response = ""
         for new_text in streamer:
-            partial_response += new_text
-            yield partial_response
+            if new_text is None:
+                continue
+            yield new_text
 
     def get_model_info(self) -> Dict:
         """

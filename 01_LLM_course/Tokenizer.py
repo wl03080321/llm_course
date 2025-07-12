@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer
 from pathlib import Path as path
 base_dir = path(__file__).parent.parent
-tokenizer = AutoTokenizer.from_pretrained("taide/Llama-3.1-TAIDE-LX-8B-Chat",      
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct",      
                                           trust_remote_code=True,
                                           use_auth_token=True,
                                           cache_dir= base_dir / "cache")

@@ -3,7 +3,10 @@ import os
 import shutil
 from src.RAG_System import RAGSystem
 from src.LLM_inference import LLMInference
+from src.gemini_llm import GeminiLLM
+from src.script import load_config
 from transformers import BitsAndBytesConfig
+
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 upload_folder = os.path.join(base_dir, "file_temp")
@@ -12,10 +15,22 @@ quantization_config = BitsAndBytesConfig(
     load_in_8bit=True,  # 啟用 8-bit 量化
 )
 rag_system = RAGSystem(embedding_model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-llm = LLMInference(
-    model_name="Qwen/Qwen2.5-1.5B-Instruct",
-    quantization_config=quantization_config,  # 使用預設配置
-)
+config = load_config()
+choice_llm = config.get("choice_llm", "google")
+
+if choice_llm == "google":
+    API_KEY = config.get("gemini", {}).get("api_key", "add_your_api_key_here")
+    MODEL_NAME = config.get("gemini", {}).get("model_name", "gemini-2.5-flash")
+    model_name = "gemini-2.5-flash"
+    llm = GeminiLLM(
+        api_key=API_KEY,
+        model=MODEL_NAME
+    )
+else:
+    llm = LLMInference(
+        model_name="Qwen/Qwen2.5-1.5B-Instruct",
+        quantization_config=quantization_config,  # 使用預設配置
+    )
 
 latest_uploaded_files = []
 
@@ -123,9 +138,9 @@ def handle_multi_upload(files):
         else:
             return "沒有檔案被處理"
 
-def chatbot_reply(message, history, system_prompt, max_token, temperature, top_p, top_k):
+def chatbot_reply(message, history, system_prompt, max_token, temperature):
     global latest_uploaded_files
-    
+    global choice_llm
     try:
         # 建構對話訊息
         messages = []
@@ -177,14 +192,11 @@ def chatbot_reply(message, history, system_prompt, max_token, temperature, top_p
         else:
             # 沒有上傳檔案：一般對話
             messages.append({"role": "user", "content": message})
-        
-        # 使用 LLM 生成回應（串流顯示）
+
         for partial_response in llm.generate(
             messages, 
             max_new_tokens=max_token,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k
+            temperature=temperature
         ):
             yield partial_response
         
@@ -372,25 +384,7 @@ with gr.Blocks(title="RAG ChatBot System") as demo:
                     label="Temperature",
                     info="控制生成的隨機性 (0.1-2.0)"
                 )
-                
-                top_p = gr.Slider(
-                    minimum=0.1,
-                    maximum=1.0,
-                    value=0.95,
-                    step=0.05,
-                    label="Top-p",
-                    info="核心採樣參數 (0.1-1.0)"
-                )
-                
-                top_k = gr.Slider(
-                    minimum=1,
-                    maximum=100,
-                    value=50,
-                    step=1,
-                    label="Top-k",
-                    info="限制詞彙候選數量 (1-100)"
-                )
-                
+
         # 中間：聊天介面
         with gr.Column(scale=2):
             # 建立聊天介面
@@ -399,9 +393,7 @@ with gr.Blocks(title="RAG ChatBot System") as demo:
                 additional_inputs=[
                     system_prompt,
                     max_token,
-                    temperature,
-                    top_p,
-                    top_k
+                    temperature
                 ],
                 title="🤖 智能問答助手",
                 type="messages"  # 使用新的 messages 格式

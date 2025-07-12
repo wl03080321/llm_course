@@ -15,9 +15,9 @@ langchain-community
 langchain-core
 langchain-huggingface
 langchain-chroma
+google-generativeai
 chromadb
 pypdf
-faiss-cpu
 gradio
 cryptography>=3.1
 

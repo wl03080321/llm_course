@@ -69,12 +69,13 @@ def chat_stream(input_data:Union[List[Dict],str]) -> str:
     return response
 
 if __name__ == "__main__":
-    history = []
+    conversation_history = []
     print("開始對話，輸入 'exit' 離開")
+    conversation_history.append({"role": "system", "content": "你是一位台灣7-11統一集團的小助理，你必須回答有關7-11超商等相關的問題，如果與該問題不相關，請直接回答不知道。"})
     while True:
         user_input = input("你：")
         if user_input.lower() == "exit":
             break
-        history.append({"role": "user", "content": user_input})
-        response = chat_stream(history)
-        history.append({"role": "assistant", "content": response})
+        conversation_history.append({"role": "user", "content": user_input})
+        response = chat_stream(conversation_history)
+        conversation_history.append({"role": "assistant", "content": response})

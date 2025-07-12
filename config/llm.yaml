@@ -1,0 +1,5 @@
+choice_llm: "google"
+gemini:
+  api_key: "YOUR_GEMINI_API_KEY"
+  model_name: "gemini-2.5-flash"
+
