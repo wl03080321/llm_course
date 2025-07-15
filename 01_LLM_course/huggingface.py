@@ -4,6 +4,7 @@ import os
 
 base_dir = path(__file__).parent.parent
 
+
 def download_model(repo_id, filename=None, cache_dir=None):
     """
     下載 Hugging Face Hub 上的模型或檔案，並回傳本地路徑與預設儲存位置。
@@ -14,13 +15,17 @@ def download_model(repo_id, filename=None, cache_dir=None):
     :return: (模型檔案路徑)
     """
     if filename:
-        local_path = hf_hub_download(repo_id=repo_id, filename=filename, cache_dir=cache_dir)
+        local_path = hf_hub_download(
+            repo_id=repo_id, filename=filename, cache_dir=cache_dir
+        )
     else:
         local_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir)
     return local_path
 
+
 # 範例用法
 if __name__ == "__main__":
-    path = download_model("sentence-transformers/all-MiniLM-L6-v2", 
-                          cache_dir= base_dir / "cache")
+    path = download_model(
+        "sentence-transformers/all-MiniLM-L6-v2", cache_dir=base_dir / "cache"
+    )
     print("模型下載路徑:", path)

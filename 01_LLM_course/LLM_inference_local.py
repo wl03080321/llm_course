@@ -1,4 +1,9 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    TextIteratorStreamer,
+    BitsAndBytesConfig,
+)
 import threading
 from typing import List, Dict, Union
 from pathlib import Path as path
@@ -11,24 +16,24 @@ quantization_config = None
 base_dir = path(__file__).parent.parent
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"
 model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        quantization_config=quantization_config if quantization_config else None,
-        trust_remote_code=True,
-        device_map='auto',
-        use_auth_token=True, # 需要 Hugging Face 的訪問令牌
-        cache_dir= base_dir / "cache"
-    )
+    model_name,
+    quantization_config=quantization_config if quantization_config else None,
+    trust_remote_code=True,
+    device_map="auto",
+    use_auth_token=True,  # 需要 Hugging Face 的訪問令牌
+    cache_dir=base_dir / "cache",
+)
 
 tokenizer = AutoTokenizer.from_pretrained(
-        model_name,
-        trust_remote_code=True,
-        device_map='auto',
-        use_auth_token=True,
-        cache_dir= base_dir / "cache"
-    )
+    model_name,
+    trust_remote_code=True,
+    device_map="auto",
+    use_auth_token=True,
+    cache_dir=base_dir / "cache",
+)
 
 
-def chat_stream(input_data:Union[List[Dict],str]) -> str:
+def chat_stream(input_data: Union[List[Dict], str]) -> str:
     if isinstance(input_data, str):
         inputs = tokenizer(input_data, return_tensors="pt").to(model.device)
         input_ids = inputs["input_ids"]
@@ -38,25 +43,25 @@ def chat_stream(input_data:Union[List[Dict],str]) -> str:
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
-        ).to(model.device)                   
+        ).to(model.device)
 
     streamer = TextIteratorStreamer(
         tokenizer,
-        skip_prompt=True,           # 跳過提示詞
-        skip_special_tokens=True    # 跳過特殊 token
+        skip_prompt=True,  # 跳過提示詞
+        skip_special_tokens=True,  # 跳過特殊 token
     )
 
     thread = threading.Thread(
         target=model.generate,
         kwargs=dict(
-            input_ids= input_ids,
+            input_ids=input_ids,
             max_new_tokens=128,
             do_sample=True,
             temperature=0.7,
             top_k=50,
             top_p=0.95,
-            streamer=streamer
-        )
+            streamer=streamer,
+        ),
     )
 
     model.eval()
@@ -68,10 +73,16 @@ def chat_stream(input_data:Union[List[Dict],str]) -> str:
     print()
     return response
 
+
 if __name__ == "__main__":
     conversation_history = []
     print("開始對話，輸入 'exit' 離開")
-    conversation_history.append({"role": "system", "content": "你是一位台灣7-11統一集團的小助理，你必須回答有關7-11超商等相關的問題，如果與該問題不相關，請直接回答不知道。"})
+    conversation_history.append(
+        {
+            "role": "system",
+            "content": "你是一位台灣7-11統一集團的小助理，你必須回答有關7-11超商等相關的問題，如果與該問題不相關，請直接回答不知道。",
+        }
+    )
     while True:
         user_input = input("你：")
         if user_input.lower() == "exit":

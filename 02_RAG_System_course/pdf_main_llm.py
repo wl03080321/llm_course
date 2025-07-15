@@ -19,8 +19,7 @@ model_path = base_dir / "cache"
 embedding_model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 embedding_model = load_embedding_model(
-    model_name=embedding_model_name,
-    cache_folder=str(model_path)
+    model_name=embedding_model_name, cache_folder=str(model_path)
 )
 
 config = load_config()
@@ -30,10 +29,7 @@ if choice_llm == "google":
     API_KEY = config.get("gemini", {}).get("api_key", "add_your_api_key_here")
     MODEL_NAME = config.get("gemini", {}).get("model_name", "gemini-2.5-flash")
     model_name = "gemini-2.5-flash"
-    llm = GeminiLLM(
-        api_key=API_KEY,
-        model=MODEL_NAME
-    )
+    llm = GeminiLLM(api_key=API_KEY, model=MODEL_NAME)
 else:
     llm = LLMInference(
         model_name="Qwen/Qwen2.5-1.5B-Instruct",
@@ -43,7 +39,7 @@ else:
 vectorstore = load_chroma_vectorstore(
     collection_name="llm_course",
     persist_directory=str(vector_store_path),
-    embedding_function=embedding_model
+    embedding_function=embedding_model,
 )
 # 向量庫重置
 vectorstore.reset_collection()
@@ -51,16 +47,14 @@ vectorstore.reset_collection()
 #### PDF處理 ####
 
 pdf_path = base_dir / "pdf_input" / "一口桃滋味-營養午餐亮點食譜.pdf"
-docs = load_pdf(pdf_path = str(pdf_path))
+docs = load_pdf(pdf_path=str(pdf_path))
 for doc in docs[:3]:
     print(doc.page_content[:100], "...")
     print("Metadata:", doc.metadata)
     print("-" * 120)
 
 
-docs = split_documents(documents=docs,
-                  chunk_size=4096,
-                  chunk_overlap=50)
+docs = split_documents(documents=docs, chunk_size=4096, chunk_overlap=50)
 
 if len(docs) == 0:
     print("沒有讀取到任何文件片段，請檢查PDF文件內容或分割參數。")
@@ -78,13 +72,13 @@ system_prompt = f"""
 conversation_history.append({"role": "system", "content": system_prompt})
 
 while True:
-    
+
     user_input = input("請輸入查詢問題 (或輸入 'exit' 退出): ")
-    if user_input.lower() == 'exit':
+    if user_input.lower() == "exit":
         break
     conversation_history.append({"role": "user", "content": user_input})
     results = vectorstore.similarity_search_with_relevance_scores(
-        user_input, 
+        user_input,
         k=2,
     )
     document_string = ""
@@ -93,7 +87,10 @@ while True:
         # print("Document Content:", doc.page_content)
         # print("Metadata:", doc.metadata)
         # print("-" * 80)
-        document_string += f"Score: {score}\nContent: {doc.page_content}\nMetadata: {doc.metadata}\n\n"
+        document_string += (
+            f"Score: {score}\nContent: {doc.page_content}\nMetadata: {doc.metadata}\n\n"
+        )
+        print("\n\n")
     prompt = f"""
     
     使用者問題：\n\n{user_input}\n\n"
@@ -105,17 +102,16 @@ while True:
     print("生成提示：", prompt)
     response = ""
     conversation_history.append({"role": "user", "content": prompt})
-    
+
     print("模型：", end="", flush=True)
-    
+
     for chunk in llm.generate(
         messages=conversation_history,
         temperature=temperature,
-        max_new_tokens=max_tokens
+        max_new_tokens=max_tokens,
     ):
         response += chunk
         print(chunk, end="", flush=True)
     print("\n")
     # 添加助手回應到歷史
     conversation_history.append({"role": "assistant", "content": response})
-
