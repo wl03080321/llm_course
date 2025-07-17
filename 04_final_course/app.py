@@ -200,7 +200,7 @@ def chatbot_reply(message, history, system_prompt, max_token, temperature):
         else:
             # 沒有上傳檔案：一般對話
             messages.append({"role": "user", "content": message})
-
+        accumulated_text = ""
         for chunks in llm.generate(
             messages, max_new_tokens=max_token, temperature=temperature
         ):
