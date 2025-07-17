@@ -10,7 +10,7 @@ vector_store_path = base_dir / "vectorstore"
 model_path = base_dir / "cache"
 
 # https://huggingface.co/sentence-transformers
-embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2"  # 768
+embedding_model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 embedding_model = load_embedding_model(
     model_name=embedding_model_name, cache_folder=str(model_path)
 )
@@ -29,7 +29,6 @@ vectorstore.reset_collection()
 document_1 = Document(
     page_content="I had chocolate chip pancakes and scrambled eggs for breakfast this morning.",
     metadata={
-        "source": "tweet",
         "page": 1,
         "filename": "breakfast_tweet.pdf",
         "type": "breakfast",
@@ -39,8 +38,7 @@ document_1 = Document(
 document_2 = Document(
     page_content="The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees.",
     metadata={
-        "source": "news",
-        "page": 2,
+        "page": 1,
         "filename": "weather_news.pdf",
         "type": "weather",
     },
@@ -64,7 +62,7 @@ check_vectorstore(vectorstore=vectorstore)
 print("更新ids=2文檔：")
 update_document = Document(
     page_content="今天天氣真好，陽光明媚，氣溫適中。",
-    metadata={"source": "news", "page": 3, "filename": "台灣.pdf", "type": "weather"},
+    metadata={"page": 3, "filename": "台灣.pdf", "type": "weather"},
 )
 vectorstore.update_document(document_id="2", document=update_document)
 check_vectorstore(vectorstore=vectorstore)

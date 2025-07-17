@@ -66,8 +66,7 @@ temperature = 0.4
 max_tokens = 10240
 
 system_prompt = f"""
-你是一個專業的回答助理，你會收到使用者詢問的問題，以及使用者提供的相關文件內容。請根據這些文件內容回答問題。
-如果文件內容無法回答使用者的問題，請直接回答「檔案中並未提及相關資訊。」，不需要回答其他內容。"
+你是一個專業的回答助理，你會收到使用者詢問的問題，以及使用者提供的相關文件內容。請根據這些文件內容回答問題。"
 """
 conversation_history.append({"role": "system", "content": system_prompt})
 
@@ -90,12 +89,12 @@ while True:
         document_string += (
             f"Score: {score}\nContent: {doc.page_content}\nMetadata: {doc.metadata}\n\n"
         )
-        print("\n\n")
+        print("\n")
     prompt = f"""
     
-    使用者問題：\n\n{user_input}\n\n"
+    使用者問題： {user_input}\n\n"
     
-    相關文件內容：\n\n
+    相關文件內容：\n
     {document_string}
     
     """
